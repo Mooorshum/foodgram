@@ -14,10 +14,9 @@ router_v1.register('ingredients', IngredientViewSet, basename='ingredients')
 
 
 urlpatterns = [
-    path('auth/token/login/', LoginView.as_view()),
-    path('auth/token/logout/', LogoutView.as_view()),
-    # path('users/set_password/', ResetPasswordView.as_view()),
-    path('', include('djoser.urls')),
     path('', include(router_v1.urls)),
+    path('auth/token/login/', LoginView.as_view(), name='login'),
+    path('auth/token/logout/', LogoutView.as_view(), name='logout'),
+    path('', include('djoser.urls')),
     path('<str:link>/', RecipeRedirectView.as_view(), name='recipe-redirect'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

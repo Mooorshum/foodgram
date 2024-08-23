@@ -2,13 +2,14 @@ from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.db.models import Sum
 from django.contrib.auth import update_session_auth_hash
+from django_filters import rest_framework as filters
 from rest_framework import viewsets, status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.decorators import action
-
+from rest_framework.permissions import AllowAny
 
 
 from recipes.models import Tag, Ingredient, Recipe, Favourite, Shopping, RecipeLink, RecipeIngredient
@@ -31,10 +32,54 @@ from users.serializers import UserSerializer, UserRegistrationSerializer
 
 
 
+class LimitPageNumberPagination(PageNumberPagination):
+    page_size_query_param = 'limit'
+    max_page_size = 10
+
+
+
+
+
+
+
+class RecipeFilter(filters.FilterSet):
+    is_favorited = filters.BooleanFilter(method='filter_is_favorited')
+    is_in_shopping_cart = filters.BooleanFilter(method='filter_is_in_shopping_cart')
+    author = filters.NumberFilter(field_name='author__id')
+    tags = filters.ModelMultipleChoiceFilter(queryset=Tag.objects.all(), field_name='tags__slug', to_field_name='slug')
+
+    class Meta:
+        model = Recipe
+        fields = ['is_favorited', 'is_in_shopping_cart', 'author', 'tags']
+
+    def filter_is_favorited(self, queryset, name, value):
+        user = self.request.user
+        if value and not user.is_anonymous:
+            return queryset.filter(favourite__user=user)
+        return queryset
+
+    def filter_is_in_shopping_cart(self, queryset, name, value):
+        user = self.request.user
+        if value and not user.is_anonymous:
+            return queryset.filter(shopping__user=user)
+        return queryset
+
+
+
+
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    pagination_class = PageNumberPagination
+    serializer_class = UserSerializer
+    pagination_class = LimitPageNumberPagination
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve', 'create']:
+            permission_classes = [AllowAny]
+        elif self.action in ['subscribe', 'list_subscriptions', 'reset_password', 'me', 'edit_avatar']:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -43,8 +88,34 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context['request'] = self.request
+        context.update({
+            'request': self.request
+        })
         return context
+    
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        return Response(response.data)
+    
+    @action(detail=False, methods=['get'], url_path='me')
+    def me(self, request):
+        user = request.user
+        if user.is_anonymous:
+            return Response({"detail": "You are not authenticated."}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['put', 'delete'], url_path='me/avatar', permission_classes=[IsAuthenticated])
+    def edit_avatar(self, request):
+        user = request.user
+        if request.method == 'PUT':
+            serializer = self.get_serializer(user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        if request.method == 'DELETE':
+            user.avatar.delete(save=True)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
     def subscribe(self, request, pk=None):
@@ -80,6 +151,17 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = FollowSerializer(subscriptions, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['post'], url_path='set_password')
+    def reset_password(self, request, *args, **kwargs):
+        user = request.user
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+        if not user.check_password(current_password):
+            return Response({'error': 'Current password is incorrect'}, status=status.HTTP_400_BAD_REQUEST)
+        user.set_password(new_password)
+        user.save()
+        update_session_auth_hash(request, user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 
@@ -89,7 +171,8 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
     pagination_class = None
-
+    permission_classes = [AllowAny,]
+        
 
 
 
@@ -111,6 +194,16 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
+    pagination_class = LimitPageNumberPagination
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = RecipeFilter
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve', 'get_short_link']:
+            permission_classes = [AllowAny] 
+        elif self.action in ['create', 'partial_update', 'destroy', 'add_to_favourites', 'add_to_shopping_cart', 'download_shopping_cart']:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -127,13 +220,23 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        recipe = serializer.save()
-        
-        # Use the RecipeReadSerializer to return the full details
-        read_serializer = RecipeReadSerializer(recipe, context={'request': request})
-        return Response(read_serializer.data)
+        if request.user == instance.author or request.user.is_staff:
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            recipe = serializer.save()
+            read_serializer = RecipeReadSerializer(recipe, context={'request': request})
+            return Response(read_serializer.data)
+        return Response({"detail": "You are not authorized to update this recipe."}, status=status.HTTP_403_FORBIDDEN)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if request.user == instance.author or request.user.is_staff:
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"detail": "You are not authorized to delete this recipe."}, status=status.HTTP_403_FORBIDDEN)
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
     @action(detail=True, methods=['get'], url_path='get-link')
     def get_short_link(self, request, *args, **kwargs):
@@ -199,25 +302,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
         return response
 
-    @action(detail=False, methods=['post'], url_path='set_password')
-    def reset_password(self, request, *args, **kwargs):
-        permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
-            user = request.user
-            current_password = request.data.get('current_password')
-            new_password = request.data.get('new_password')
-            if not user.check_password(current_password):
-                return Response({'error': 'Current password is incorrect'}, status=status.HTTP_400_BAD_REQUEST)
-            user.set_password(new_password)
-            user.save()
-            update_session_auth_hash(request, user)
-            return Response(status=status.HTTP_200_OK)
 
 
 
 
 class RecipeRedirectView(APIView):
+
     def get(self, request, link, *args, **kwargs):
         recipe_link = get_object_or_404(RecipeLink, link=link)
         recipe = recipe_link.recipe
@@ -273,3 +364,4 @@ class ShoppingViewSet(viewsets.ModelViewSet):
     serializer_class = ShoppingSerializer
     queryset = Shopping.objects.all()
     pagination_class = PageNumberPagination
+    permission_classes = [IsAuthenticated]

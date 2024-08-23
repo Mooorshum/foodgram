@@ -1,11 +1,6 @@
-from django.db import models
-
+from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractUser
-
-
-
-
-
+from django.db import models
 
 class User(AbstractUser):
     """
@@ -17,7 +12,18 @@ class User(AbstractUser):
         (USER, 'User'),
         (ADMIN, 'Admin')
     ]
-    username = models.CharField('Username', max_length=150, unique=True)
+    
+    username_validator = RegexValidator(
+        regex=r'^[\w.@+-]+\Z',
+        message="Username can only contain letters, digits, and the following symbols: @/./+/-/_"
+    )
+    
+    username = models.CharField(
+        'Username',
+        max_length=150,
+        unique=True,
+        validators=[username_validator]
+    )
     first_name = models.CharField('First_name', max_length=150)
     last_name = models.CharField('Last_name', max_length=150)
     email = models.EmailField('email_address', unique=True)
@@ -26,12 +32,12 @@ class User(AbstractUser):
         upload_to='avatars/',
         null=True,
         default=None
-        )
+    )
     password = models.CharField(max_length=150, verbose_name='Password')
+    
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'password', 'first_name', 'last_name']
     
-
     class Meta:
         verbose_name = 'User'
         verbose_name_plural = 'Users'

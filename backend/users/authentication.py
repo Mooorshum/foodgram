@@ -1,14 +1,9 @@
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from django.contrib.auth import authenticate
-
-
-from users.models import User
 
 
 class LoginView(ObtainAuthToken):

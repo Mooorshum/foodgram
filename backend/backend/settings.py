@@ -121,9 +121,10 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated', 
+        'rest_framework.permissions.AllowAny',
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -133,25 +134,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
-
-""" SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=15),
-    'AUTH_HEADER_TYPES': ('Bearer',),
-}
- """
-
-""" DJOSER = {
-    'LOGIN_FIELD': 'email',
-    'USER_CREATE_PASSWORD_RETYPE': False,
-    'SEND_CONFIRMATION_EMAIL': False,
-    'SERIALIZERS': {
-        'user': 'users.serializers.UserSerializer',
-        'user_create': 'users.serializers.UserSerializer',
-        'current_user': 'users.serializers.UserSerializer',
-    },
-} """
-
 
 
 DJOSER = {
