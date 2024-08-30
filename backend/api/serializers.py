@@ -2,10 +2,9 @@ import base64
 
 from django.core.files.base import ContentFile
 from django.core.validators import MinValueValidator
-from rest_framework import serializers
-
 from recipes.models import (Favourite, Ingredient, Recipe, RecipeIngredient,
                             RecipeLink, Shopping, Tag)
+from rest_framework import serializers
 from users.models import Follow, User
 from users.serializers import UserSerializer
 
