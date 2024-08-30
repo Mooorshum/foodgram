@@ -340,6 +340,9 @@ class FavouriteViewSet(viewsets.ModelViewSet):
         return Favourite.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
+        recipe_id = request.data.get('recipe_id')
+
+    def create(self, request, *args, **kwargs):
         recipe_id = self.kwargs.get('pk')
         data = {'recipe_id': recipe_id}
         serializer = self.get_serializer(data=data)
