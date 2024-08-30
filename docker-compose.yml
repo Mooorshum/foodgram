@@ -30,7 +30,7 @@ services:
       - static:/staticfiles
 
   gateway:
-    build: ./nginx
+    build: ./foodgram/nginx
     env_file: .env
     ports:
       - 7000:91
