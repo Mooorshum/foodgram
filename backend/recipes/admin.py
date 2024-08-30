@@ -1,5 +1,7 @@
 from django.contrib import admin
-from recipes.models import Tag, Ingredient, Recipe, Favourite, Shopping, RecipeIngredient
+
+from recipes.models import (Favourite, Ingredient, Recipe, RecipeIngredient,
+                            Shopping, Tag)
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -34,7 +36,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'name',
     )
     list_filter = [
-         "tags", 
+        'tags',
     ]
     inlines = [RecipeIngredientInline]
 

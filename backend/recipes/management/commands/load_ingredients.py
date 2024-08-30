@@ -1,7 +1,10 @@
 import csv
 import json
+
 from django.core.management.base import BaseCommand
+
 from recipes.models import Ingredient
+
 
 class Command(BaseCommand):
     help = 'Load ingredients data from CSV and JSON files'

@@ -1,9 +1,9 @@
+from django.contrib.auth import authenticate
 from rest_framework import status
-from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.contrib.auth import authenticate
 
 
 class LoginView(ObtainAuthToken):
@@ -13,7 +13,10 @@ class LoginView(ObtainAuthToken):
         password = request.data.get('password')
         user = authenticate(request, email=email, password=password)
         if user is None:
-            return Response({'error': 'Invalid email or password'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'Invalid email or password'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         token, created = Token.objects.get_or_create(user=user)
         return Response({
             'auth_token': token.key,
@@ -28,5 +31,3 @@ class LogoutView(ObtainAuthToken):
         token = Token.objects.get(user=user)
         token.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-

@@ -1,14 +1,10 @@
-import string
 import random
+import string
 
-from django.db import models
 from django.core.validators import MinValueValidator
+from django.db import models
 
 from users.models import User
-
-
-
-
 
 
 class Tag(models.Model):
@@ -20,10 +16,6 @@ class Tag(models.Model):
 
     def __str__(self):
         return f'tag: {self.name};'
-
-
-
-
 
 
 class Ingredient(models.Model):
@@ -39,16 +31,13 @@ class Ingredient(models.Model):
         ('pcs', 'Pieces'),
     )
     name = models.CharField(max_length=255)
-    measurement_unit = models.CharField(max_length=3, choices=MEASUREMENT_UNIT_CHOICES)
+    measurement_unit = models.CharField(
+        max_length=3,
+        choices=MEASUREMENT_UNIT_CHOICES
+    )
 
     def __str__(self):
         return f'{self.name}, ({self.get_measurement_unit_display()})'
-
-
-
-
-
-
 
 
 class Recipe(models.Model):
@@ -97,9 +86,6 @@ class Recipe(models.Model):
         return f'recipe: {self.name}; author: {self.author};'
 
 
-
-
-
 class Favourite(models.Model):
     """
     Model for favourite recipes.
@@ -109,22 +95,22 @@ class Favourite(models.Model):
         on_delete=models.CASCADE,
         related_name='favourites'
     )
-    recipe =  models.ForeignKey(
+    recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
         related_name='favorites'
     )
-    
+
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['user', 'recipe'], name='unique_favourite')
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_favourite'
+            )
         ]
 
     def __str__(self):
         return f'user:{self.user}; recipes: {self.recipe};'
-
-
-
 
 
 class Shopping(models.Model):
@@ -135,7 +121,7 @@ class Shopping(models.Model):
         User, on_delete=models.CASCADE,
         related_name='shopping'
     )
-    recipe =  models.ForeignKey(
+    recipe = models.ForeignKey(
         Recipe,
         on_delete=models.SET_NULL,
         null=True,
@@ -145,12 +131,6 @@ class Shopping(models.Model):
 
     def __str__(self):
         return f'user:{self.user}; recipes: {self.recipe};'
-
-
-
-
-
-
 
 
 class RecipeIngredient(models.Model):
@@ -179,9 +159,6 @@ class RecipeIngredient(models.Model):
                 name='unique_ingredients'
             )
         ]
-
-
-
 
 
 class RecipeLink(models.Model):

@@ -1,6 +1,7 @@
-from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 from django.db import models
+
 
 class User(AbstractUser):
     """
@@ -12,12 +13,15 @@ class User(AbstractUser):
         (USER, 'User'),
         (ADMIN, 'Admin')
     ]
-    
+
     username_validator = RegexValidator(
         regex=r'^[\w.@+-]+\Z',
-        message="Username can only contain letters, digits, and the following symbols: @/./+/-/_"
+        message=(
+            'Username can only contain letters, digits, and '
+            'the following symbols: @/./+/-/_'
+        )
     )
-    
+
     username = models.CharField(
         'Username',
         max_length=150,
@@ -34,10 +38,10 @@ class User(AbstractUser):
         default=None
     )
     password = models.CharField(max_length=150, verbose_name='Password')
-    
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'password', 'first_name', 'last_name']
-    
+
     class Meta:
         verbose_name = 'User'
         verbose_name_plural = 'Users'
@@ -50,10 +54,6 @@ class User(AbstractUser):
         return f'user: {self.username}; role: {self.role}'
 
 
-
-
-
-
 class Follow(models.Model):
     """
     Model to discribe users following one another.
@@ -62,12 +62,12 @@ class Follow(models.Model):
         User,
         related_name='follower',
         on_delete=models.CASCADE
-        )
+    )
     following = models.ForeignKey(
         User,
         related_name='following',
         on_delete=models.CASCADE
-        )
+    )
 
     class Meta:
         constraints = [
