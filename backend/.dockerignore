@@ -1,0 +1,6 @@
+venv
+.git
+.env
+postman_collection
+infra
+docs

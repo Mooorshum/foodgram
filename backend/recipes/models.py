@@ -143,6 +143,11 @@ class Shopping(models.Model):
         related_name='recipe'
     )
 
+    def __str__(self):
+        return f'user:{self.user}; recipes: {self.recipe};'
+
+
+
 
 
 
@@ -171,7 +176,9 @@ class RecipeIngredient(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['recipe', 'ingredient'],
-                name='unique_ingredients')]
+                name='unique_ingredients'
+            )
+        ]
 
 
 

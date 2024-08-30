@@ -55,13 +55,13 @@ class RecipeFilter(filters.FilterSet):
     def filter_is_favorited(self, queryset, name, value):
         user = self.request.user
         if value and not user.is_anonymous:
-            return queryset.filter(favourite__user=user)
+            return queryset.filter(recipe__user=user)
         return queryset
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
         user = self.request.user
         if value and not user.is_anonymous:
-            return queryset.filter(shopping__user=user)
+            return queryset.filter(recipe__user=user)
         return queryset
 
 
@@ -80,6 +80,8 @@ class UserViewSet(viewsets.ModelViewSet):
         elif self.action in ['subscribe', 'list_subscriptions', 'reset_password', 'me', 'edit_avatar']:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
+
+
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -105,14 +107,18 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['put', 'delete'], url_path='me/avatar', permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['put', 'delete'], url_path='me/avatar')
     def edit_avatar(self, request):
         user = request.user
         if request.method == 'PUT':
+            if 'avatar' not in request.data:
+                return Response({"detail": "No avatar provided."}, status=status.HTTP_400_BAD_REQUEST)
             serializer = self.get_serializer(user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response({
+                "avatar": request.build_absolute_uri(user.avatar.url)
+            }, status=status.HTTP_200_OK)
         if request.method == 'DELETE':
             user.avatar.delete(save=True)
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -121,33 +127,36 @@ class UserViewSet(viewsets.ModelViewSet):
     def subscribe(self, request, pk=None):
         following_user = get_object_or_404(User, pk=pk)
         user = request.user
-
         if request.method == 'POST':
             if user == following_user:
                 return Response({"detail": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
-
             if Follow.objects.filter(user=user, following=following_user).exists():
                 return Response({"detail": "You are already following this user."}, status=status.HTTP_400_BAD_REQUEST)
-
             follow = Follow.objects.create(user=user, following=following_user)
-            serializer = FollowSerializer(follow, context={'request': request})
+            recipes_limit = request.query_params.get('recipes_limit')
+            recipes = Recipe.objects.filter(author=following_user)
+            if recipes_limit and recipes_limit.isdigit():
+                recipes = recipes[:int(recipes_limit)]
+            serializer = FollowSerializer(follow, context={'request': request, 'recipes': recipes})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
         elif request.method == 'DELETE':
             follow = Follow.objects.filter(user=user, following=following_user).first()
             if follow:
                 follow.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response({"detail": "You are not following this user."}, status=status.HTTP_400_BAD_REQUEST)
 
-            return Response({"detail": "You are not following this user."}, status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=False, methods=['get'], url_path='subscriptions')
     def list_subscriptions(self, request):
         user = request.user
         if user.is_anonymous:
             return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
-
         subscriptions = Follow.objects.filter(user=user)
+        page = self.paginate_queryset(subscriptions)
+        if page is not None:
+            serializer = FollowSerializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
         serializer = FollowSerializer(subscriptions, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -167,7 +176,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
     pagination_class = None
@@ -180,7 +189,7 @@ class TagViewSet(viewsets.ModelViewSet):
 
 
 
-class IngredientViewSet(viewsets.ModelViewSet):
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
     pagination_class = None
@@ -265,7 +274,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response({"detail": "Recipe not found in favourites."}, status=status.HTTP_400_BAD_REQUEST)
 
-
     @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
     def add_to_shopping_cart(self, request, *args, **kwargs):
         recipe = self.get_object()
@@ -332,7 +340,7 @@ class FavouriteViewSet(viewsets.ModelViewSet):
         return Favourite.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        recipe_id = self.kwargs.get('pk')  # Get the recipe_id from the URL
+        recipe_id = self.kwargs.get('pk')
         data = {'recipe_id': recipe_id}
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
@@ -340,7 +348,7 @@ class FavouriteViewSet(viewsets.ModelViewSet):
         return Response({"detail": "Recipe added to favorites."}, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
-        recipe_id = self.kwargs.get('pk')  # Get the recipe_id from the URL
+        recipe_id = self.kwargs.get('pk')
         try:
             recipe = Recipe.objects.get(id=recipe_id)
         except Recipe.DoesNotExist:
@@ -362,6 +370,8 @@ class FavouriteViewSet(viewsets.ModelViewSet):
 
 class ShoppingViewSet(viewsets.ModelViewSet):
     serializer_class = ShoppingSerializer
-    queryset = Shopping.objects.all()
     pagination_class = PageNumberPagination
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Shopping.objects.filter(user=self.request.user)

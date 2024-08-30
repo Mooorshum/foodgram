@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 
 
 from recipes.models import Tag, Ingredient, Recipe, Favourite, Shopping, RecipeIngredient, RecipeLink
@@ -76,7 +77,9 @@ class AddIngredientSerializer(serializers.ModelSerializer):
     """
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all())
-    amount = serializers.IntegerField()
+    amount = serializers.IntegerField(
+        validators=[MinValueValidator(1, 'Minimum amount of ingredient needed')]
+    )
 
     class Meta:
         model = RecipeIngredient
@@ -167,12 +170,47 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         many=True,
         write_only=True
     )
-    image = Base64ImageField(required=False, allow_null=True)
+    image = Base64ImageField(required=True, allow_null=True)
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Recipe
         fields = ('ingredients', 'tags', 'image', 'name', 'text', 'cooking_time', 'author')
+
+    def validate_ingredients(self, value):
+        if not value:
+            raise serializers.ValidationError("At least one ingredient is required.")
+        seen_ingredients = set()
+        for ingredient in value:
+            ingredient_id = ingredient['id']
+            if ingredient_id in seen_ingredients:
+                raise serializers.ValidationError(f"Duplicate ingredient with ID {ingredient_id} found.")
+            seen_ingredients.add(ingredient_id)
+        for ingredient in value:
+            if ingredient['amount'] < 1:
+                raise serializers.ValidationError("Ingredient amount must be at least 1.")
+        return value
+
+    def validate_tags(self, value):
+        if not value:
+            raise serializers.ValidationError("At least one tag is required.")
+        seen_tags = set()
+        for tag in value:
+            tag_id = tag
+            if tag_id in seen_tags:
+                raise serializers.ValidationError(f"Duplicate tag with ID {tag_id} found.")
+            seen_tags.add(tag_id)
+        return value
+    
+    def validate_image(self, value):
+        if not value:
+            raise serializers.ValidationError("You have to provide an image.")
+        return value
+
+    def validate_cooking_time(self, value):
+        if value < 1:
+            raise serializers.ValidationError("Cooking time has to be at least 1 minute.")
+        return value
 
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
@@ -195,7 +233,8 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 ingredient=ingredient['id'],
                 defaults={'amount': ingredient['amount']}
             )
-        recipe.tags.set(tags)
+        if tags is not None:
+            recipe.tags.set(tags)
 
     
 
@@ -216,6 +255,11 @@ class RecipeLinkSerializer(serializers.ModelSerializer):
 
     def get_short_link(self, obj):
         return obj.link
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['short-link'] = representation.pop('short_link')
+        return representation
 
 
 
@@ -262,10 +306,11 @@ class FollowSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
+    avatar = serializers.ImageField(source='following.avatar')
 
     class Meta:
         model = Follow
-        fields = ('user', 'following', 'email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes', 'recipes_count')
+        fields = ('user', 'following', 'email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes', 'recipes_count', 'avatar')
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
@@ -302,6 +347,12 @@ class FollowSerializer(serializers.ModelSerializer):
 
 
 class ShoppingSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all()
+    )
+    recipe = serializers.PrimaryKeyRelatedField(
+        queryset=Recipe.objects.all(),
+    )
 
     class Meta:
         model = Shopping
