@@ -141,7 +141,7 @@ jobs:
         target: "foodgram"
         debug: true
 
-    - name: Executing remote ssh commands to deploy to server
+    - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.HOST }}
