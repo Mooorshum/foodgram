@@ -18,4 +18,4 @@ transformed_data = [
 with open('transformed_ingredients.json', 'w', encoding='utf-8') as file:
     json.dump(transformed_data, file, ensure_ascii=False, indent=4)
 
-print("Transformation complete! Check 'transformed_ingredients.json' for the output.")
+print("Transformation complete!")
