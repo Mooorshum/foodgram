@@ -18,7 +18,6 @@ services:
     volumes:
       - static:/backend_static/static/
       - media:/app/media
-      - ./data:/app/data
     depends_on:
       - db
 
@@ -30,7 +29,7 @@ services:
       - static:/staticfiles
 
   gateway:
-    build: ./foodgram/nginx
+    build: mooorshum/foodgram_gateway:latest
     env_file: .env
     ports:
       - 7000:91
