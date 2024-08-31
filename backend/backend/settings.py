@@ -17,6 +17,8 @@ DEBUG = True
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='localhost 127.0.0.1')
 ALLOWED_HOSTS = ALLOWED_HOSTS.replace('"', '').split()
 
+CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
