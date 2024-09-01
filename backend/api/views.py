@@ -289,8 +289,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_short_link(self, request, *args, **kwargs):
         recipe = self.get_object()
         recipe_link, created = RecipeLink.objects.get_or_create(recipe=recipe)
-        serializer = RecipeLinkSerializer(recipe_link)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        link = f"https://{request.get_host()}/{recipe_link.link}"
+        return Response({"short-link": link}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post', 'delete'], url_path='favorite')
     def add_to_favourites(self, request, *args, **kwargs):
