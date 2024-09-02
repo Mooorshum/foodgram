@@ -1,22 +1,22 @@
-import base64
-
-from django.core.files.base import ContentFile
 from django.core.validators import MinValueValidator
-from recipes.models import (Favourite, Ingredient, Recipe, RecipeIngredient,
-                            RecipeLink, Shopping, Tag)
 from rest_framework import serializers
+
+from api.fields import Base64ImageField
+from api.pagination import LimitPageNumberPagination
+from recipes.models import (
+    Favourite,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    RecipeLink,
+    Shopping,
+    Tag
+)
 from users.models import Follow, User
 from users.serializers import UserSerializer
 
 
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
 
-        return super().to_internal_value(data)
 
 
 class SimpleRecipeSerializer(serializers.ModelSerializer):
@@ -208,12 +208,17 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
     def add_tags_ingredients(self, ingredients, tags, recipe):
+        recipe_ingredients_to_create = []
         for ingredient in ingredients:
-            RecipeIngredient.objects.update_or_create(
-                recipe=recipe,
-                ingredient=ingredient['id'],
-                defaults={'amount': ingredient['amount']}
+            recipe_ingredients_to_create.append(
+                RecipeIngredient(
+                    recipe=recipe,
+                    ingredient_id=ingredient['id'],
+                    amount=ingredient['amount']
+                )
             )
+        if recipe_ingredients_to_create:
+            RecipeIngredient.objects.bulk_create(recipe_ingredients_to_create)
         if tags is not None:
             recipe.tags.set(tags)
 
@@ -296,11 +301,17 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def get_recipes(self, obj):
         request = self.context.get('request')
-        limit = request.GET.get('recipes_limit')
+        page = request.query_params.get('page', 1)
+        limit = request.query_params.get('limit', 10)
+        recipes_limit = request.query_params.get('recipes_limit')
         recipes = Recipe.objects.filter(author=obj.following)
-        if limit and limit.isdigit():
-            recipes = recipes[:int(limit)]
-        return SimpleRecipeSerializer(recipes, many=True).data
+        if recipes_limit and recipes_limit.isdigit():
+            recipes = recipes[:int(recipes_limit)]
+        paginator = LimitPageNumberPagination()
+        paginator.page_size = int(limit)
+        paginated_recipes = paginator.paginate_queryset(recipes, request)
+        serializer = SimpleRecipeSerializer(paginated_recipes, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj.following).count()

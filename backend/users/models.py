@@ -9,10 +9,6 @@ class User(AbstractUser):
     """
     USER = 'user'
     ADMIN = 'admin'
-    ROLE_USER = [
-        (USER, 'User'),
-        (ADMIN, 'Admin')
-    ]
 
     username_validator = RegexValidator(
         regex=r'^[\w.@+-]+\Z',
@@ -31,7 +27,6 @@ class User(AbstractUser):
     first_name = models.CharField('First_name', max_length=150)
     last_name = models.CharField('Last_name', max_length=150)
     email = models.EmailField('email_address', unique=True)
-    role = models.CharField(max_length=15, choices=ROLE_USER, default=USER)
     avatar = models.ImageField(
         upload_to='avatars/',
         null=True,
@@ -71,6 +66,10 @@ class Follow(models.Model):
 
     class Meta:
         constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'following'],
+                name='unique_follow'
+            )
         ]
 
     def __str__(self):

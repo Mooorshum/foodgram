@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -28,6 +29,6 @@ class LogoutView(ObtainAuthToken):
 
     def post(self, request, *args, **kwargs):
         user = request.user
-        token = Token.objects.get(user=user)
+        token = get_object_or_404(Token, user=user)
         token.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
