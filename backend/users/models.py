@@ -30,6 +30,7 @@ class User(AbstractUser):
     avatar = models.ImageField(
         upload_to='avatars/',
         null=True,
+        blank=False,
         default=None
     )
     password = models.CharField(max_length=150, verbose_name='Password')
@@ -40,13 +41,6 @@ class User(AbstractUser):
     class Meta:
         verbose_name = 'User'
         verbose_name_plural = 'Users'
-
-    @property
-    def admin(self):
-        return self.role == self.ADMIN
-
-    def __str__(self):
-        return f'user: {self.username}; role: {self.role}'
 
 
 class Follow(models.Model):

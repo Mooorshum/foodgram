@@ -21,7 +21,7 @@ class Tag(models.Model):
         blank=True,
         verbose_name='Tag slug',
     )
-    
+
     class Meta:
         verbose_name = "Tag"
         verbose_name_plural = "Tags"
@@ -177,8 +177,8 @@ class Shopping(models.Model):
         verbose_name_plural = "Shopping carts"
         constraints = [
             models.UniqueConstraint(
-                fields=['user'],
-                name='unique_user'
+                fields=['user', 'recipe'],
+                name='unique_shopping'
             )
         ]
 

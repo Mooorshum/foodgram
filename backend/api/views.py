@@ -11,9 +11,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.filters import RecipeFilter
-from api.mixins import AddToRelatedMixin
+from api.mixins import AddRemoveMixin
 from api.pagination import LimitPageNumberPagination
-from api.permissions import IsAuthorOrStaff
+from api.permissions import IsAuthorOrStaffOrReadOnly
 from api.serializers import (
     FavouriteSerializer,
     FollowSerializer,
@@ -44,6 +44,7 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = LimitPageNumberPagination
 
     def get_permissions(self):
+        permission_classes = []
         if self.action in ['list', 'retrieve', 'create']:
             permission_classes = [AllowAny]
         elif self.action in [
@@ -127,7 +128,15 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='subscriptions')
     def list_subscriptions(self, request):
         user = request.user
-        subscriptions = Follow.objects.filter(user=user)
+        subscriptions = Follow.objects.filter(user=user).order_by('-id')
+        page = self.paginate_queryset(subscriptions)
+        if page is not None:
+            serializer = FollowSerializer(
+                page,
+                many=True,
+                context={'request': request}
+            )
+            return self.get_paginated_response(serializer.data)
         serializer = FollowSerializer(
             subscriptions,
             many=True,
@@ -164,16 +173,15 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
 
 
-class RecipeViewSet(viewsets.ModelViewSet, AddToRelatedMixin):
+class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
     queryset = Recipe.objects.all()
     pagination_class = LimitPageNumberPagination
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve', 'get_short_link']:
-            permission_classes = [AllowAny]
-        elif self.action in [
+        permission_classes = [AllowAny]
+        if self.action in [
             'create',
             'add_to_favourites',
             'add_to_shopping_cart',
@@ -181,7 +189,7 @@ class RecipeViewSet(viewsets.ModelViewSet, AddToRelatedMixin):
         ]:
             permission_classes = [IsAuthenticated]
         elif self.action in ['partial_update', 'destroy']:
-            permission_classes = [IsAuthorOrStaff]
+            permission_classes = [IsAuthorOrStaffOrReadOnly]
         return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
@@ -200,8 +208,8 @@ class RecipeViewSet(viewsets.ModelViewSet, AddToRelatedMixin):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post', 'delete'], url_path='favorite')
-    def add_to_favourites(self, request, *args, **kwargs):
-        return self.add_to_related(
+    def add_to_delete_from_favourites(self, request, *args, **kwargs):
+        return self.add_or_remove(
             request,
             model=Favourite,
             serializer_class=SimpleRecipeSerializer,
@@ -210,8 +218,8 @@ class RecipeViewSet(viewsets.ModelViewSet, AddToRelatedMixin):
         )
 
     @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
-    def add_to_shopping_cart(self, request, *args, **kwargs):
-        return self.add_to_related(
+    def add_to_delete_from_shopping_cart(self, request, *args, **kwargs):
+        return self.add_or_remove(
             request,
             model=Shopping,
             serializer_class=SimpleRecipeSerializer,

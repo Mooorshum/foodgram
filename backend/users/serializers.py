@@ -20,6 +20,11 @@ class UserSerializer(serializers.ModelSerializer):
             'avatar'
         )
 
+    def validate(self, data):
+        if 'avatar' not in data:
+            raise serializers.ValidationError({'avatar': 'This field is required.'})
+        return data
+
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
         if not user.is_anonymous:
