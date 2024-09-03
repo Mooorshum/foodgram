@@ -7,13 +7,13 @@ class AddRemoveMixin:
     Mixin to add or remove a recipe to/from a related model.
     """
     def add_or_remove(
-            self,
-            request,
-            model,
-            serializer_class,
-            add_message,
-            remove_message
-        ):
+        self,
+        request,
+        model,
+        serializer_class,
+        add_message,
+        remove_message
+    ):
         if not request.user.is_authenticated:
             return Response(
                 {"detail": "Please login or create an account."},
