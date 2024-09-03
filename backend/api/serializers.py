@@ -15,9 +15,6 @@ from users.models import Follow, User
 from users.serializers import UserSerializer
 
 
-
-
-
 class SimpleRecipeSerializer(serializers.ModelSerializer):
     """
     A simplified serializer to provide reduced recipe description.
@@ -148,9 +145,13 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if 'ingredients' not in data:
-            raise serializers.ValidationError({'ingredients': 'This field is required.'})
+            raise serializers.ValidationError(
+                {'ingredients': 'This field is required.'}
+            )
         if 'tags' not in data:
-            raise serializers.ValidationError({'tags': 'This field is required.'})
+            raise serializers.ValidationError(
+                {'tags': 'This field is required.'}
+            )
         return super().validate(data)
 
     def validate_ingredients(self, value):

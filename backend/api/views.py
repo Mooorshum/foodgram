@@ -116,7 +116,10 @@ class UserViewSet(viewsets.ModelViewSet):
                 context={'request': request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        follow = Follow.objects.filter(user=user, following=following_user).first()
+        follow = Follow.objects.filter(
+            user=user,
+            following=following_user
+        ).first()
         if follow:
             follow.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

@@ -22,7 +22,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if 'avatar' not in data:
-            raise serializers.ValidationError({'avatar': 'This field is required.'})
+            raise serializers.ValidationError(
+                {'avatar': 'This field is required.'}
+            )
         return data
 
     def get_is_subscribed(self, obj):

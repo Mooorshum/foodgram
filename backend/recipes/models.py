@@ -57,7 +57,7 @@ class Ingredient(models.Model):
         choices=MEASUREMENT_UNIT_CHOICES,
         verbose_name='Measurement unit',
     )
-    
+
     class Meta:
         verbose_name = "Ingredient"
         verbose_name_plural = "Ingredients"

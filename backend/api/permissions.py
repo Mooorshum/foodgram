@@ -1,8 +1,10 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
+
 class IsAuthorOrStaffOrReadOnly(BasePermission):
     """
-    Custom permission to only allow authors of a recipe or staff to edit or delete it.
+    Custom permission to only allow authors of
+    a recipe or staff to edit or delete it.
     """
 
     def has_object_permission(self, request, view, obj):
