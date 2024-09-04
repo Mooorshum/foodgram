@@ -187,7 +187,7 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
         if self.action in ['list', 'retrieve', 'get_short_link']:
             permission_classes = [AllowAny]
         elif self.action in [
-            'create', 'add_to_delete_from_favourites', 
+            'create', 'add_to_delete_from_favourites',
             'add_to_delete_from_shopping_cart', 'download_shopping_cart'
         ]:
             permission_classes = [IsAuthenticated]
@@ -212,7 +212,10 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post', 'delete'], url_path='favorite', permission_classes=[IsAuthenticated])
+    @action(
+        detail=True, methods=['post', 'delete'],
+        url_path='favorite', permission_classes=[IsAuthenticated]
+    )
     def add_to_delete_from_favourites(self, request, *args, **kwargs):
         return self.add_or_remove(
             request,
@@ -222,7 +225,10 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
             remove_message="Recipe not found in favourites."
         )
 
-    @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart', permission_classes=[IsAuthenticated])
+    @action(
+        detail=True, methods=['post', 'delete'],
+        url_path='shopping_cart', permission_classes=[IsAuthenticated]
+    )
     def add_to_delete_from_shopping_cart(self, request, *args, **kwargs):
         return self.add_or_remove(
             request,
