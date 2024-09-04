@@ -23,7 +23,9 @@ from api.serializers import (
     RecipeWriteSerializer,
     ShoppingSerializer,
     SimpleRecipeSerializer,
-    TagSerializer
+    TagSerializer,
+    UserRegistrationSerializer,
+    UserSerializer
 )
 from recipes.models import (
     Favourite,
@@ -35,7 +37,6 @@ from recipes.models import (
     Tag
 )
 from users.models import Follow, User
-from users.serializers import UserRegistrationSerializer, UserSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -183,16 +184,17 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
     filterset_class = RecipeFilter
 
     def get_permissions(self):
-        permission_classes = [AllowAny]
-        if self.action in [
-            'create',
-            'add_to_favourites',
-            'add_to_shopping_cart',
-            'download_shopping_cart'
+        if self.action in ['list', 'retrieve', 'get_short_link']:
+            permission_classes = [AllowAny]
+        elif self.action in [
+            'create', 'add_to_delete_from_favourites', 
+            'add_to_delete_from_shopping_cart', 'download_shopping_cart'
         ]:
             permission_classes = [IsAuthenticated]
         elif self.action in ['partial_update', 'destroy']:
             permission_classes = [IsAuthorOrStaffOrReadOnly]
+        else:
+            permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
@@ -210,7 +212,7 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post', 'delete'], url_path='favorite')
+    @action(detail=True, methods=['post', 'delete'], url_path='favorite', permission_classes=[IsAuthenticated])
     def add_to_delete_from_favourites(self, request, *args, **kwargs):
         return self.add_or_remove(
             request,
@@ -220,7 +222,7 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
             remove_message="Recipe not found in favourites."
         )
 
-    @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
+    @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart', permission_classes=[IsAuthenticated])
     def add_to_delete_from_shopping_cart(self, request, *args, **kwargs):
         return self.add_or_remove(
             request,

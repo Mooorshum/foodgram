@@ -8,7 +8,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', default='*')
 
 
-DEBUG = os.getenv('DEBUG', default=False)
+""" DEBUG = os.getenv('DEBUG', default=False) """
+DEBUG = True #bool(DEBUG)
 
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='localhost 127.0.0.1')
@@ -69,7 +70,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 
 # Used during deployment
-DATABASES = {
+""" DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('POSTGRES_DB', 'django'),
@@ -78,15 +79,15 @@ DATABASES = {
         'HOST': os.getenv('DB_HOST', ''),
         'PORT': os.getenv('DB_PORT', 5432)
     }
-}
+} """
 
 # Used during development
-""" DATABASES = {
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
-} """
+}
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -107,7 +108,7 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTH_USER_MODEL = 'users.User'
 
 
-LANGUAGE_CODE = 'en-gb'
+LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'UTC'
 

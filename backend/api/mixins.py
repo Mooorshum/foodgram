@@ -14,15 +14,10 @@ class AddRemoveMixin:
         add_message,
         remove_message
     ):
-        if not request.user.is_authenticated:
-            return Response(
-                {"detail": "Please login or create an account."},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
         recipe = self.get_object()
         user = request.user
         if request.method == 'POST':
-            instance, created = model.objects.get_or_create(
+            _, created = model.objects.get_or_create(
                 user=user,
                 recipe=recipe
             )

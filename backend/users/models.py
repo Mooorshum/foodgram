@@ -7,8 +7,6 @@ class User(AbstractUser):
     """
     Custom user model.
     """
-    USER = 'user'
-    ADMIN = 'admin'
 
     username_validator = RegexValidator(
         regex=r'^[\w.@+-]+\Z',
