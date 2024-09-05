@@ -2,6 +2,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -210,8 +211,27 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
             recipe_link,
             context={'request': request}
         )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
+        short_link = serializer.data['short-link']
+        response_data = {
+            'short-link': short_link,
+            'message': 'Short link copied to clipboard!',
+            'script': f"""
+                <script>
+                    function copyToClipboard(text) {{
+                        const tempInput = document.createElement('input');
+                        tempInput.value = text;
+                        document.body.appendChild(tempInput);
+                        tempInput.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(tempInput);
+                        alert('Short link copied to clipboard: ' + text);
+                    }}
+                    copyToClipboard('{short_link}');
+                </script>
+            """
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+    
     @action(
         detail=True, methods=['post', 'delete'],
         url_path='favorite', permission_classes=[IsAuthenticated]
@@ -266,8 +286,8 @@ class RecipeRedirectView(APIView):
 
     def get(self, request, link, *args, **kwargs):
         recipe_link = get_object_or_404(RecipeLink, link=link)
-        recipe = recipe_link.recipe
-        return redirect('recipe-detail', pk=recipe.pk)
+        recipe_detail_url = reverse('recipes-detail', args=[recipe_link.recipe.id])
+        return redirect(recipe_detail_url)
 
 
 class FavouriteViewSet(viewsets.ModelViewSet):
