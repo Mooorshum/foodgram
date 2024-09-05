@@ -16,7 +16,7 @@ services:
     image: mooorshum/foodgram_backend:latest
     env_file: .env
     volumes:
-      - static:/backend_static/static/
+      - static:/backend_static/
       - media:/app/media
     depends_on:
       - db
@@ -34,7 +34,7 @@ services:
     ports:
       - 7000:91
     volumes:
-      - static:/staticfiles
+      - static:/staticfiles/
       - media:/media
     depends_on:
       - backend
