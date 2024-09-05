@@ -210,9 +210,6 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
             recipe_link,
             context={'request': request}
         )
-        short_link = serializer.data.get('short-link', '')
-        if short_link:
-            pyperclip.copy(short_link)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(

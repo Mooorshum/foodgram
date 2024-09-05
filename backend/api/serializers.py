@@ -304,7 +304,8 @@ class RecipeLinkSerializer(serializers.ModelSerializer):
 
     def get_short_link(self, obj):
         request = self.context.get('request')
-        return request.build_absolute_uri(f'/{obj.link}/')
+        host = request.get_host()
+        return f"{request.scheme}://{host}/s/{obj.link}"
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
