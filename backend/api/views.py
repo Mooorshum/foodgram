@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-import pyclip
+import pyperclip
 
 from api.filters import RecipeFilter
 from api.mixins import AddRemoveMixin
@@ -214,7 +214,7 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
         )
         short_link = serializer.data.get('short-link', '')
         if short_link:
-            pyclip.copy(short_link)
+            pyperclip.copy(short_link)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
