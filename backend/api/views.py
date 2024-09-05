@@ -10,8 +10,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-import pyperclip
-
 from api.filters import RecipeFilter
 from api.mixins import AddRemoveMixin
 from api.pagination import LimitPageNumberPagination
