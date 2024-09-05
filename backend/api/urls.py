@@ -23,5 +23,9 @@ urlpatterns = [
     path('auth/token/login/', LoginView.as_view(), name='login'),
     path('auth/token/logout/', LogoutView.as_view(), name='logout'),
     path('', include('djoser.urls')),
-    path('s/<str:link>/', RecipeRedirectView.as_view(), name='recipe-redirect'),
+    path(
+        's/<str:link>/',
+        RecipeRedirectView.as_view(),
+        name='recipe-redirect'
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
