@@ -1,7 +1,7 @@
 from django.contrib.auth import update_session_auth_hash
 from django.db.models import Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -205,7 +205,7 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
     @action(detail=True, methods=['get'], url_path='get-link')
     def get_short_link(self, request, *args, **kwargs):
         recipe = self.get_object()
-        recipe_link, created = RecipeLink.objects.get_or_create(recipe=recipe)
+        recipe_link, _ = RecipeLink.objects.get_or_create(recipe=recipe)
         serializer = RecipeLinkSerializer(
             recipe_link,
             context={'request': request}
@@ -267,8 +267,7 @@ class RecipeRedirectView(APIView):
     def get(self, request, link, *args, **kwargs):
         recipe_link = get_object_or_404(RecipeLink, link=link)
         recipe = recipe_link.recipe
-        serializer = RecipeReadSerializer(recipe, context={'request': request})
-        return Response(serializer.data)
+        return redirect('recipe-detail', pk=recipe.pk)
 
 
 class FavouriteViewSet(viewsets.ModelViewSet):
