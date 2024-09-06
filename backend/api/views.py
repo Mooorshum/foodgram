@@ -272,7 +272,7 @@ class RecipeRedirectView(APIView):
             'recipes-detail',
             kwargs={'pk': recipe.id}
         )
-        full_url = f"{request.scheme}://{request.get_host()}/{recipe_detail_url}"
+        full_url = f"{request.scheme}://{request.get_host()}{recipe_detail_url}"
         return HttpResponseRedirect(full_url)
 
 
