@@ -264,14 +264,11 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
 
 
 class RecipeRedirectView(APIView):
-
     def get(self, request, link, *args, **kwargs):
         recipe_link = get_object_or_404(RecipeLink, link=link)
         recipe = recipe_link.recipe
-        recipe_detail_path = f'/recipes/{recipe.id}/'
-        base_url = f'{request.scheme}://{request.get_host()}'
-        full_url = f'{base_url}{recipe_detail_path}'
-        return HttpResponseRedirect(full_url)
+        serializer = RecipeReadSerializer(recipe, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class FavouriteViewSet(viewsets.ModelViewSet):
