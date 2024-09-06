@@ -1,6 +1,6 @@
 from django.contrib.auth import update_session_auth_hash
 from django.db.models import Sum
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect
 from django_filters import rest_framework as filters
@@ -268,15 +268,14 @@ class RecipeRedirectView(APIView):
     def get(self, request, link, *args, **kwargs):
         recipe_link = get_object_or_404(RecipeLink, link=link)
         recipe = recipe_link.recipe
-        # Use the reverse function to get the correct URL path
        # recipe_detail_url = reverse(
-       #     'recipes-detail',  # URL name as defined in the router
-       #     kwargs={'pk': recipe.id}  # Use the recipe ID for detail view
+       #     'recipes-detail',
+       #     kwargs={'pk': recipe.id}
        # )
-        recipe_detail_url = 'recipes/2/'
-        # Construct the full URL with the scheme and host
-        full_url = f"{request.scheme}://{request.get_host()}{recipe_detail_url}"
-        return redirect(full_url)
+       # recipe_detail_url = 'recipes/2/'
+       # full_url = f"{request.scheme}://{request.get_host()}{recipe_detail_url}"
+       # return HttpResponseRedirect(full_url)
+        return HttpResponseRedirect(reverse('recipes-detail', kwargs={'pk': recipe.id}))
 
 
 class FavouriteViewSet(viewsets.ModelViewSet):
