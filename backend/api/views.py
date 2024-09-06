@@ -1,8 +1,8 @@
 from django.contrib.auth import update_session_auth_hash
 from django.db.models import Sum
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.urls import reverse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect
 from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -264,11 +264,18 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
 
 
 class RecipeRedirectView(APIView):
+
     def get(self, request, link, *args, **kwargs):
         recipe_link = get_object_or_404(RecipeLink, link=link)
         recipe = recipe_link.recipe
-        recipe_detail_path = reverse('recipes-detail', kwargs={'pk': recipe.id})
-        return render(request, 'recipes/redirect.html', {'recipe_detail_path': recipe_detail_path})
+        # Use the reverse function to get the correct URL path
+        recipe_detail_url = reverse(
+            'recipes-detail',  # URL name as defined in the router
+            kwargs={'pk': recipe.id}  # Use the recipe ID for detail view
+        )
+        # Construct the full URL with the scheme and host
+        full_url = f"{request.scheme}://{request.get_host()}{recipe_detail_url}"
+        return redirect(full_url)
 
 
 class FavouriteViewSet(viewsets.ModelViewSet):
