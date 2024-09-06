@@ -268,11 +268,9 @@ class RecipeRedirectView(APIView):
     def get(self, request, link, *args, **kwargs):
         recipe_link = get_object_or_404(RecipeLink, link=link)
         recipe = recipe_link.recipe
-        recipe_detail_url = reverse(
-            'recipes-detail',
-            kwargs={'pk': recipe.id}
-        )
-        full_url = f"{request.scheme}://{request.get_host()}{recipe_detail_url}"
+        recipe_detail_path = f'/recipes/{recipe.id}/'
+        base_url = f'{request.scheme}://{request.get_host()}'
+        full_url = f'{base_url}{recipe_detail_path}'
         return HttpResponseRedirect(full_url)
 
 
