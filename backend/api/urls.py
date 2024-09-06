@@ -17,13 +17,11 @@ router_v1.register('users', UserViewSet, basename='users')
 router_v1.register('tags', TagViewSet, basename='tags')
 router_v1.register('recipes', RecipeViewSet, basename='recipes')
 router_v1.register('ingredients', IngredientViewSet, basename='ingredients')
+router_v1.register('s/<str:link>/', RecipeRedirectView.as_view(), basename='recipe-redirect')
+
 
 urlpatterns = [
-    path(
-        's/<str:link>/',
-        RecipeRedirectView.as_view(),
-        name='recipe-redirect'
-    ),
+
     path('', include(router_v1.urls)),
     path('auth/token/login/', LoginView.as_view(), name='login'),
     path('auth/token/logout/', LogoutView.as_view(), name='logout'),
