@@ -268,14 +268,13 @@ class RecipeRedirectView(APIView):
     def get(self, request, link, *args, **kwargs):
         recipe_link = get_object_or_404(RecipeLink, link=link)
         recipe = recipe_link.recipe
-       # recipe_detail_url = reverse(
-       #     'recipes-detail',
-       #     kwargs={'pk': recipe.id}
-       # )
-       # recipe_detail_url = 'recipes/2/'
-       # full_url = f"{request.scheme}://{request.get_host()}{recipe_detail_url}"
-       # return HttpResponseRedirect(full_url)
-        return HttpResponseRedirect(reverse('recipes-detail', kwargs={'pk': recipe.id}))
+        recipe_detail_url = reverse(
+            'recipes-detail',
+            kwargs={'pk': recipe.id}
+        )
+        recipe_detail_url = 'recipes/2/'
+        full_url = f"{request.scheme}://{request.get_host()}{recipe_detail_url}"
+        return HttpResponseRedirect(full_url)
 
 
 class FavouriteViewSet(viewsets.ModelViewSet):
