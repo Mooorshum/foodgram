@@ -269,10 +269,11 @@ class RecipeRedirectView(APIView):
         recipe_link = get_object_or_404(RecipeLink, link=link)
         recipe = recipe_link.recipe
         # Use the reverse function to get the correct URL path
-        recipe_detail_url = reverse(
-            'recipes-detail',  # URL name as defined in the router
-            kwargs={'pk': recipe.id}  # Use the recipe ID for detail view
-        )
+       # recipe_detail_url = reverse(
+       #     'recipes-detail',  # URL name as defined in the router
+       #     kwargs={'pk': recipe.id}  # Use the recipe ID for detail view
+       # )
+        recipe_detail_url = 'recipes/2/'
         # Construct the full URL with the scheme and host
         full_url = f"{request.scheme}://{request.get_host()}{recipe_detail_url}"
         return redirect(full_url)
