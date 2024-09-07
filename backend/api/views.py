@@ -274,8 +274,10 @@ class RecipeRedirectView(APIView):
             'recipes-detail',
             kwargs={'pk': recipe.id}
         )
+        scheme_url = request.scheme
+        host_url = request.get_host()
         recipe_detail_url = recipe_detail_url.replace('/api', '')
-        full_url = f"{request.scheme}://{request.get_host()}{recipe_detail_url}"
+        full_url = f"{scheme_url}://{host_url}{recipe_detail_url}"
         return HttpResponseRedirect(full_url)
 
 
