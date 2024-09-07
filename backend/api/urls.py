@@ -20,11 +20,7 @@ router_v1.register('recipes', RecipeViewSet, basename='recipes')
 router_v1.register('ingredients', IngredientViewSet, basename='ingredients')
 
 urlpatterns = [
-    path(
-        's/<str:link>/',
-        RecipeRedirectView.as_view(),
-        name='recipe-redirect'
-    ),
+
     path('', include(router_v1.urls)),
     path('auth/token/login/', LoginView.as_view(), name='login'),
     path('auth/token/logout/', LogoutView.as_view(), name='logout'),
