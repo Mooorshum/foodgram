@@ -119,11 +119,10 @@ class AddIngredientSerializer(serializers.ModelSerializer):
 
 class AddTagSerializer(serializers.ModelSerializer):
     """
-    Serializer for the creation of Ingredient objects.
+    Serializer for the creation of Tag objects.
     """
     id = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all())
-    amount = serializers.IntegerField()
 
     class Meta:
         model = Tag
