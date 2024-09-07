@@ -298,5 +298,5 @@ class ShoppingViewSet(viewsets.ModelViewSet):
 
 class RecipeRedirectView(APIView):
     def get(self, request, link):
-        recipe = get_object_or_404(Recipe, short_url=link)
+        recipe = get_object_or_404(RecipeLink, link=link)
         return redirect(f'/recipes/{recipe.id}/')
