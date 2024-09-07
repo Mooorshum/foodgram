@@ -1,5 +1,5 @@
 from django.urls import path
-from redirects.views import RecipeRedirectView
+from api.views import RecipeRedirectView
 
 urlpatterns = [
 

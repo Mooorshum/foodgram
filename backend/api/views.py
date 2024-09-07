@@ -9,6 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.test import APIRequestFactory
 from rest_framework.views import APIView
 
 from api.filters import IngredientFilter, RecipeFilter
@@ -280,3 +281,15 @@ class ShoppingViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Shopping.objects.filter(user=self.request.user)
+
+
+class RecipeRedirectView(APIView):
+    def get(self, request, link, *args, **kwargs):
+        recipe_link = get_object_or_404(RecipeLink, link=link)
+        recipe = recipe_link.recipe
+        factory = APIRequestFactory()
+        detail_url = reverse('recipes-detail', kwargs={'pk': recipe.id})
+        new_request = factory.get(detail_url)
+        recipe_view = RecipeViewSet.as_view({'get': 'retrieve'})
+        response = recipe_view(new_request, pk=recipe.id)
+        return response
