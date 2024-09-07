@@ -7,7 +7,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
     path(
-        's/<str:link>/',
+        's/<slug:link>/',
         RecipeRedirectView.as_view(),
         name='recipe-redirect'
     ),

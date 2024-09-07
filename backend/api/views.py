@@ -282,7 +282,7 @@ class ShoppingViewSet(viewsets.ModelViewSet):
         return Shopping.objects.filter(user=self.request.user)
 
 
-""" class RecipeRedirectView(APIView):
+class RecipeRedirectView(APIView):
     def get(self, request, link, *args, **kwargs):
         recipe_link = get_object_or_404(RecipeLink, link=link)
         recipe = recipe_link.recipe
@@ -294,9 +294,9 @@ class ShoppingViewSet(viewsets.ModelViewSet):
         host_url = request.get_host()
         recipe_detail_url = recipe_detail_url.replace('/api', '')
         full_url = f"{scheme_url}://{host_url}{recipe_detail_url}"
-        return HttpResponseRedirect(full_url) """
+        return HttpResponseRedirect(full_url)
 
-class RecipeRedirectView(APIView):
+""" class RecipeRedirectView(APIView):
     def get(self, request, link):
         recipe = get_object_or_404(RecipeLink, link=link)
-        return redirect(f'/recipes/{recipe.id}/')
+        return redirect(f'/recipes/{recipe.id}/') """
