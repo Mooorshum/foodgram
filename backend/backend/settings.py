@@ -34,7 +34,6 @@ INSTALLED_APPS = [
     'recipes',
     'users',
     'api',
-    'redirects',
 ]
 
 
