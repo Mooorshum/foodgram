@@ -2,7 +2,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.db.models import Sum
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -282,7 +282,7 @@ class ShoppingViewSet(viewsets.ModelViewSet):
         return Shopping.objects.filter(user=self.request.user)
 
 
-class RecipeRedirectView(APIView):
+""" class RecipeRedirectView(APIView):
     def get(self, request, link, *args, **kwargs):
         recipe_link = get_object_or_404(RecipeLink, link=link)
         recipe = recipe_link.recipe
@@ -294,4 +294,9 @@ class RecipeRedirectView(APIView):
         host_url = request.get_host()
         recipe_detail_url = recipe_detail_url.replace('/api', '')
         full_url = f"{scheme_url}://{host_url}{recipe_detail_url}"
-        return HttpResponseRedirect(full_url)
+        return HttpResponseRedirect(full_url) """
+
+class RecipeRedirectView(APIView):
+    def get(self, request, link):
+        recipe = get_object_or_404(Recipe, short_url=link)
+        return redirect(f'/recipes/{recipe.id}/')
