@@ -10,7 +10,7 @@ from api.views import (
     TagViewSet,
     UserViewSet
 )
-from redirects.views import RecipeRedirectView
+
 from users.authentication import LoginView, LogoutView
 
 router_v1 = DefaultRouter()
