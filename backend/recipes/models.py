@@ -34,19 +34,17 @@ class Ingredient(models.Model):
     """
     Model for recipe ingredients.
     """
-    GRAMS = 'g'
-    KILOGRAMS = 'kg'
-    MILLILITERS = 'ml'
-    LITERS = 'L'
-    SPOONFULLS = 'sps'
-    PIECES = 'pcs'
+    ГРАММЫ = 'г'
+    МИЛЛИЛИТРЫ = 'мл'
+    СТ_ЛОЖКИ = 'ст.л.'
+    Ч_ЛОЖКИ = 'ч.л.'
+    ШТУКИ = 'шт'
     MEASUREMENT_UNIT_CHOICES = (
-        (GRAMS, 'Grams'),
-        (KILOGRAMS, 'Kilograms'),
-        (MILLILITERS, 'Milliliters'),
-        (LITERS, 'Liters'),
-        (SPOONFULLS, 'Spoonfuls'),
-        (PIECES, 'Pieces'),
+        (ГРАММЫ, 'г'),
+        (МИЛЛИЛИТРЫ, 'мл'),
+        (СТ_ЛОЖКИ, 'ст. ложек'),
+        (Ч_ЛОЖКИ, 'ч. ложек'),
+        (ШТУКИ, 'шт.'),
     )
     name = models.CharField(
         max_length=255,
